@@ -195,7 +195,7 @@ always @(*) begin
                 RE_Imj = FFT_Q ; 
                 Wr_addr = FFT_addr + N_sc ;
                 RE_Valid_OUT = 1 ; 
-            if (Counter == Last_indx) begin
+            if (Counter == Last_indx-1) begin
                 Symbol_now = Symbol_now + 1 ; 
                 Sym_Done = 1 ; 
             end else begin
