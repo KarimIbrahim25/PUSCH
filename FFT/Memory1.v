@@ -180,8 +180,3 @@ end
 //     read <= saved && columns_write<pow3x5 || fft_done && saved || fft_done && full2 ?1:0;
 // end         
 endmodule
-
-// always @(posedge clk) begin
-//     read <= saved && columns_write<pow3x5 || fft_done && saved || fft_done && full2 ?1:0;
-// end         
-endmodule
