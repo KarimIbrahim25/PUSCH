@@ -9,6 +9,7 @@ module PUSCH_Top_tb;
   // Inputs
   reg clk;
   reg reset;
+  reg reset_fft;
   reg enable;
   reg Data_in;
   reg [1:0] base_graph;
@@ -40,6 +41,7 @@ module PUSCH_Top_tb;
       .clk(clk),
       //.clk_new(clk_new),
       .reset(reset),
+      .reset_fft(reset_fft),
       .enable(enable),
       .Data_in(Data_in),
       .base_graph(base_graph),
@@ -65,6 +67,14 @@ module PUSCH_Top_tb;
 
   always #(period_new/2) clk = ~clk;
   //always #(period_new/2) clk_new = ~clk_new;
+  
+
+  initial begin
+    reset_fft=0;
+    #(period_new*2);
+    #(500)reset_fft=1;
+    #(period_new)reset_fft=0;
+  end
 
   initial begin
     // Initialize Inputs
