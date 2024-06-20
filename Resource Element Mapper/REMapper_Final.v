@@ -130,7 +130,8 @@ always @(*) begin
                 Sym_Done = 0 ;
              EN_Counter = 1'b1 ; 
        
-            end             RE_Done = 0 ; 
+            end     
+            RE_Done = 0 ; 
             
             if (Counter[0] ==  N_sc[0]) begin // condition to write dmrs symbols 
                 RE_Real = Dmrs_I ;
@@ -194,7 +195,7 @@ always @(*) begin
                 RE_Imj = FFT_Q ; 
                 Wr_addr = FFT_addr + N_sc ;
                 RE_Valid_OUT = 1 ; 
-            if (Counter == Last_indx-2) begin
+            if (Counter == Last_indx) begin
                 Symbol_now = Symbol_now + 1 ; 
                 Sym_Done = 1 ; 
             end else begin
