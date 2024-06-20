@@ -2,6 +2,7 @@ module PUSCH_Top #(parameter WIDTH_IFFT = 26)
     ( 
     input clk,
     input reset,
+    input reset_div,
     input reset_fft,
     input enable,
 
@@ -124,21 +125,21 @@ wire Ping_VALID_Q;
 // clock divider for scrambler
 clk_div #(.div(clk_div_16)) clk_div_scrambler_16 (
     .clk(clk),       // Clock
-    .rst_n(reset),      // Asynchronous reset active low
+    .rst_n(reset_div),      // Asynchronous reset active low
     .clk_new(clk_16)    // 16
     );
 
 // clock divider for FFT
 clk_div #(.div(clk_div_6)) clk_div_FFT_6 (
     .clk(clk),       // Clock
-    .rst_n(reset),      // Asynchronous reset active low
+    .rst_n(reset_div),      // Asynchronous reset active low
     .clk_new(clk_6)     // 16/3 = 5.3333
     );
 
 // clock divider for IFFT
 clk_div #(.div(clk_div_8)) clk_div_IFFT_8 (
     .clk(clk),       // Clock
-    .rst_n(reset),      // Asynchronous reset active low
+    .rst_n(reset_div),      // Asynchronous reset active low
     .clk_new(clk_8)     // 16/2 = 8
     );
 
@@ -323,7 +324,7 @@ REM_TOP #(.MEM_DEPTH(MEM_DEPTH_IFFT), .WRITE_ADDR_SHIFT(WRITE_ADDR_SHIFT),
    (
     .CLK_RE_TOP(clk_6) , 
     .RST_RE_TOP(reset) , 
-
+    .CLK_RE_New(clk_8) ,
     .N_sc_TOP(N_sc_start) , // subcarrier starting point
     .N_rb_TOP(N_rb) ,     // no. of RBs allocated
     .Sym_Start_TOP(Sym_Start_REM) ,
@@ -359,7 +360,8 @@ IFFT_CP_TOP #(.WIDTH(WIDTH_IFFT)) IFFT_Block
     .rst(reset),
     .data_in_r(Data_REM_IFFT_r),
     .data_in_i(Data_REM_IFFT_i),
-    .VALID(Ping_VALID_I),
+    .VALID_R(Ping_VALID_I),
+    .VALID_I(Ping_VALID_Q),
     
     .READy_out(Data_valid),
     .data_out_r(Data_r),
