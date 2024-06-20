@@ -324,7 +324,7 @@ REM_TOP #(.MEM_DEPTH(MEM_DEPTH_IFFT), .WRITE_ADDR_SHIFT(WRITE_ADDR_SHIFT),
    (
     .CLK_RE_TOP(clk_6) , 
     .RST_RE_TOP(reset) , 
-    .CLK_RE_New(clk_8) ,
+    .CLK_RE_New(clk) ,
     .N_sc_TOP(N_sc_start) , // subcarrier starting point
     .N_rb_TOP(N_rb) ,     // no. of RBs allocated
     .Sym_Start_TOP(Sym_Start_REM) ,
@@ -356,7 +356,7 @@ REM_TOP #(.MEM_DEPTH(MEM_DEPTH_IFFT), .WRITE_ADDR_SHIFT(WRITE_ADDR_SHIFT),
 // IFFT and Cyclic Prefix
 IFFT_CP_TOP #(.WIDTH(WIDTH_IFFT)) IFFT_Block
 (
-    .clk(clk_8),
+    .clk(clk),
     .rst(reset),
     .data_in_r(Data_REM_IFFT_r),
     .data_in_i(Data_REM_IFFT_i),
