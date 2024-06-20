@@ -5,7 +5,8 @@ module SDF2_TOP # (parameter WIDTH = 26)
  input   wire rst,
  input   wire [WIDTH-1:0] data_in1_r,
  input   wire [WIDTH-1:0] data_in1_i,
- input   wire VALID,
+ input   wire VALID_R,
+ input   wire VALID_I,
 
  output wire READy_out,
  output wire [10:0] IFFT_mem_address,            // IFFT Memory address
@@ -50,7 +51,8 @@ R2_butterfly # (.WIDTH(26) , .POINTS(1024)) u0(
     .rst(rst),
     .data_in_r(data_in1_r),
     .data_in_i(data_in1_i),
-    .VALID(VALID),    
+    .VALID_R(VALID_R),
+    .VALID_I(VALID_I),    
     .radix_address(address1),
     .OUT_VALID(valid1),
     .data_out_r(in_r1),
@@ -276,37 +278,37 @@ R4_butterfly5 # (.WIDTH(26) , .POINTS(1)) u15(
     .data_in_i(out_i5),    
     .radix_address(address6),
     .order_cnt(IFFT_mem_address),     
-    .data_out_r(in_r6),
-    .data_out_i(in_i6),
+    .data_out_r(data_out1_r),
+    .data_out_i(data_out1_i),
     .OUT_VALID(READy_out) 
     );
 
 
                                    
-///********************************************************///
-//////////////////// Twiddle Factor 2048 ROM /////////////////////
-///********************************************************///
+// ///********************************************************///
+// //////////////////// Twiddle Factor 2048 ROM /////////////////////
+// ///********************************************************///
 
-Twiddle2048 u16(                                                             /// HERE ****????  No boundaries in last stage
-    .clk(clk),
-    .addr(address6),    
-    .tw_re(twiddle_r6), 
-    .tw_im(twiddle_i6) 
-    );
+// Twiddle2048 u16(                                                             /// HERE ****????  No boundaries in last stage
+//     .clk(clk),
+//     .addr(address6),    
+//     .tw_re(twiddle_r6), 
+//     .tw_im(twiddle_i6) 
+//     );
 
 
-///********************************************************///
-////////////////////// Complex Multiplier /////////////////////
-///********************************************************///
+// ///********************************************************///
+// ////////////////////// Complex Multiplier /////////////////////
+// ///********************************************************///
 
-Multiply u17(
-    .a_re(in_r6), 
-    .a_im(in_i6), 
-    .b_re(twiddle_r6), 
-    .b_im(twiddle_i6), 
-    .m_re(data_out1_r),
-    .m_im(data_out1_i)
-    );
+// Multiply u17(
+//     .a_re(in_r6), 
+//     .a_im(in_i6), 
+//     .b_re(twiddle_r6), 
+//     .b_im(twiddle_i6), 
+//     .m_re(data_out1_r),
+//     .m_im(data_out1_i)
+//     );
 
 
 endmodule
