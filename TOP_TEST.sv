@@ -90,7 +90,7 @@ module PUSCH_Top_tb;
     N_cell_ID = 900;
     Config = 0;
     N_slot_frame = 0;
-    N_rb = 10;
+    N_rb = 6; // FFT Symbols / 12
     En_hopping = 0;
     N_symbol = 3;
     N_sc_start = 193;
