@@ -10,6 +10,7 @@ module PUSCH_Top_tb;
   reg clk;
   reg reset;
   reg reset_fft;
+  reg reset_div;
   reg enable;
   reg Data_in;
   reg [1:0] base_graph;
@@ -42,6 +43,7 @@ module PUSCH_Top_tb;
       //.clk_new(clk_new),
       .reset(reset),
       .reset_fft(reset_fft),
+      .reset_div(reset_div),
       .enable(enable),
       .Data_in(Data_in),
       .base_graph(base_graph),
@@ -72,7 +74,7 @@ module PUSCH_Top_tb;
   initial begin
     reset_fft=0;
     #(period_new*2);
-    #(500)reset_fft=1;
+    #(45)reset_fft=1;
     #(period_new)reset_fft=0;
   end
 
@@ -95,6 +97,11 @@ module PUSCH_Top_tb;
     Sym_Start_REM = 1;
     Sym_End_REM = 8;
 
+    // Clk Divider reset
+    reset_div = 0;
+    #(period_new);
+    reset_div = 1;
+
 
     // CRC 
     #(period);
@@ -103,12 +110,12 @@ module PUSCH_Top_tb;
     Data_in = 1;
 
     #(period);
-	enable = 0;
+  enable = 0;
 
-	#(period*18);
-	// HARQ
-	base_graph = 2; 
-	rv_number = 1;
+  #(period*18);
+  // HARQ
+  base_graph = 2; 
+  rv_number = 1;
     process_number = 1;
     available_coded_bits = 144;
 
@@ -116,8 +123,8 @@ module PUSCH_Top_tb;
     // Scrambler
     
     
-	
-	#(period*1000);
+  
+  #(period*1000);
 
     /*
     // Add stimulus here
