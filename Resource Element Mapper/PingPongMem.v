@@ -5,6 +5,7 @@ module PingPongMemory #(
     parameter WRITE_ADDR_SHIFT = 423  // Address shift for zero padding
 )(
     input wire CLK,
+    input wire CLK_new , 
     input wire RST,
     input wire signed [FFT_Len-1:0] data_in,
     input wire write_enable,
@@ -17,6 +18,7 @@ module PingPongMemory #(
 
     // Memories
     reg  [17:0] extend ; 
+    reg out_ping ; 
     reg signed [FFT_Len-1:0] ping [0:MEM_DEPTH-1];
     reg signed [FFT_Len-1:0] pong [0:MEM_DEPTH-1];
     reg flag ; 
@@ -32,7 +34,13 @@ module PingPongMemory #(
             use_ping <= ~use_ping;
         end
     end
-
+    always@(posedge CLK_new or negedge RST) begin 
+        if(! RST )
+            out_ping <= 1 ; 
+        else if(Last_indx == MEM_DEPTH-1 ) begin 
+            out_ping <= ~out_ping;
+        end    
+    end 
     // Write logic with address shift
     always @(posedge CLK) begin
         if (!RST) begin
@@ -71,7 +79,7 @@ module PingPongMemory #(
     end
     
     // Read logic on Sym_Done signal
-    always @(posedge CLK or negedge RST) begin
+    always @(posedge CLK_new or negedge RST) begin
      if(!RST) begin 
           data_out <= 0 ; 
           Last_indx <= 0 ;
@@ -79,7 +87,7 @@ module PingPongMemory #(
           Ping_VALID <= 0 ; 
      end
      else if (flag) begin
-            if (!use_ping) begin
+            if (out_ping) begin
                 extend <= ping[Last_indx-1] ; 
                 if(extend[17] == 1 ) begin
                 data_out<={8'b11111111,extend};
@@ -92,7 +100,6 @@ module PingPongMemory #(
                                  Ping_VALID <=1 ;
 
                 end
-                Ping_VALID <=1 ;
             end else begin
                  extend <= pong[Last_indx-1] ; 
                     if(extend[17] == 1 ) begin
@@ -113,16 +120,17 @@ module PingPongMemory #(
      end   else begin
             data_out <= 'b0 ;
             Last_indx <= 1 ; 
+            Ping_VALID <= 0 ; 
             extend <= 0 ; 
             end
     end
  
-always@(posedge CLK or negedge RST) begin 
+always@(posedge CLK_new or negedge RST) begin 
     if(!RST)
             flag = 0 ; 
     else if(Sym_Done) begin 
             flag = 1 ; 
-    end else if (Last_indx == MEM_DEPTH)  
+    end else if (Last_indx == MEM_DEPTH-1)  
             flag = 0 ; 
  
 end
