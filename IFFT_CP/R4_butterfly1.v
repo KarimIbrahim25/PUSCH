@@ -32,16 +32,16 @@ reg signed [WIDTH-1:0] out1_i [0:POINTS-1];
 reg signed [WIDTH-1:0] out2_i [0:POINTS-1];
 reg signed [WIDTH-1:0] out3_i [0:POINTS-1];
 
-  
-reg full;             // Signal is high after every storing/operating data 
+
 reg End_operation;    // Signal is high after storing all points data (N * 3) (256 * 3) 
 reg SDF_DONE;         // Signal indicate that SDF Control Unit has done for 2048 POINTS
-reg OUT_Done;        // Signal indicate that SDF OUTPUT is READY
+
 
 reg [2:0] cs,ns;
 
 reg [7:0] counter;
 reg [11:0] counter_points;  // 2048 counter for tracing 2048 point output
+reg [1:0] cnt;
 
 localparam IDLE       = 3'b000;    // IDLE mode
 localparam MODE1      = 3'b001;    // store data in reg0
@@ -57,43 +57,47 @@ always @(posedge clk or negedge rst) begin
      counter_points <= 0;
      End_operation  <= 0;     
      SDF_DONE       <= 0;
-     OUT_Done       <= 0;
-     OUT_VALID      <= 0;
      cs             <= IDLE;
      radix_address  <= 0;
 
-        for (i = 0; i < POINTS; i = i + 1) begin
-            reg0_r[i] <= 0;
-            reg0_i[i] <= 0;
-            reg1_r[i] <= 0;
-            reg1_i[i] <= 0;
-            reg2_r[i] <= 0;
-            reg2_i[i] <= 0;
-            in_r[i]   <= 0;
-            in_i[i]   <= 0;
-
-            out0_r[i] <= 0;
-            out0_i[i] <= 0;
-            out1_r[i] <= 0;
-            out1_i[i] <= 0;
-            out2_r[i] <= 0;
-            out2_i[i] <= 0;
-            out3_r[i] <= 0;
-            out3_i[i] <= 0;                      
-        end
-
   end else begin
-    cs <= ns ;
+    cs <= ns ;                 
 
-        if (cs == MODE1 || cs == MODE2 || cs == MODE3 || cs == MODE4 || cs == IDLE) begin   
-            if (counter == (POINTS-1)) begin
-                counter <= 0;
-                full <= 1;      
-            end else begin
+        if (cs==IDLE) begin
+            if (VALID) begin
                 counter <= counter + 1;
-                full <= 0;
+                counter_points <= counter_points + 1 ;
+                SDF_DONE <=0;
+            end else begin
+                counter <= 0; 
+                counter_points <= 0;
+                SDF_DONE <=0;
+                End_operation <=0;
             end
-            if (counter_points == (N-1)) begin
+        end else if (cs == MODE1 || cs == MODE2 || cs == MODE3 || cs == MODE4 || cs == IDLE) begin
+            if (cnt==2'd2) begin
+                if (counter == 8'd255) begin
+                    counter <= 0;
+                    SDF_DONE<=1;     
+                end else begin
+                    counter <= counter + 1;
+                    SDF_DONE<=1;
+                end
+            end else if (cnt ==2'd1) begin
+                counter <= counter + 1;
+                SDF_DONE <=0;
+                End_operation<=1;
+            end else begin
+                SDF_DONE <=0;
+                End_operation <=0;
+                if (counter == 8'd255) begin
+                    counter <= 0;    
+                end else begin
+                    counter <= counter + 1;
+                end                
+            end
+
+            if (counter_points == 12'd2047) begin
                 counter_points <= 0;
             end else begin
                 counter_points <= counter_points + 1 ;
@@ -103,44 +107,70 @@ always @(posedge clk or negedge rst) begin
             counter <= 0;
         end
 
-        if (cs==MODE1 && End_operation) begin
-            if (radix_address == 1*(POINTS-1)) begin
+        if (cs==MODE1 && OUT_VALID) begin
+            if (radix_address == 1*(12'd255)) begin
                 radix_address <= 0;
+                counter <= 0;
             end else begin
                 radix_address <= radix_address + 1;
+                counter <= counter + 1;
             end
-        end else if (cs==MODE2 && End_operation) begin
-            if (radix_address == 2*(POINTS-1)) begin
+        end else if (cs==MODE2 && OUT_VALID) begin
+            if (radix_address == 2*(12'd255)) begin
                 radix_address <= 0;
+                counter <= 0;
             end else begin
                 radix_address <= radix_address + 2;
+                counter <= counter + 1;
             end
-        end else if (cs==MODE3 && End_operation) begin
-            if (radix_address == 3*(POINTS-1)) begin
+        end else if (cs==MODE3 && OUT_VALID) begin
+            if (radix_address == 3*(12'd255)) begin
                 radix_address <= 0;
+                counter <= 0;
             end else begin
                 radix_address <= radix_address + 3;
+                counter <= counter + 1;
             end
         end else begin
             radix_address <= 0;
         end
+        
 
     end
 end
 
 
 // SDF Stage-4 Radix-4 Butterfly Operation
-always @(*) begin 
+always @(*) begin
+OUT_VALID=OUT_VALID;
+cnt=cnt;
+data_out_r    = data_out_r;
+data_out_i    = data_out_i;
+
+for (i = 0; i < POINTS; i = i + 1) begin
+    reg0_r[i] = reg0_r[i];
+    reg0_i[i] = reg0_i[i];
+    reg1_r[i] = reg1_r[i];
+    reg1_i[i] = reg1_i[i];
+    reg2_r[i] = reg2_r[i];
+    reg2_i[i] = reg2_i[i];
+    in_r[i]   = in_r[i];
+    in_i[i]   = in_i[i];
+    out0_r[i] = out0_r[i];
+    out0_i[i] = out0_i[i];
+    out1_r[i] = out1_r[i];
+    out1_i[i] = out1_i[i];
+    out2_r[i] = out2_r[i];
+    out2_i[i] = out2_i[i];
+    out3_r[i] = out3_r[i];
+    out3_i[i] = out3_i[i];
+  end 
 
     case (cs)
 
         IDLE: begin
-                full = 0;
-                counter        = 0;
-                counter_points = 0;
-                End_operation  = 0;     
-                SDF_DONE       = 0;
-                OUT_Done      = 0;                                
+                OUT_VALID=0;    
+                cnt =0;                              
                     if (VALID) begin
                         reg0_r[counter] = data_in_r ;           // second 4 point 
                         reg0_i[counter] = data_in_i ;                        
@@ -158,16 +188,19 @@ always @(*) begin
 
                             reg0_r[counter] = data_in_r ;           // second 4 point 
                             reg0_i[counter] = data_in_i ;
+
+                            OUT_VALID=1;
                          
-                            if (counter == (POINTS-1)) begin
+                            if (counter == 8'd255) begin
                                 ns   = MODE2;
                             end else begin
                                 ns   = MODE1;
                             end                        
                         end else begin
+                            OUT_VALID=0;
                             reg0_r[counter] = data_in_r ;
                             reg0_i[counter] = data_in_i ;
-                            if (counter == (POINTS-1)) begin
+                            if (counter == 8'd255) begin
                                 ns = MODE2;
                             end else begin
                                 ns = MODE1;
@@ -175,9 +208,11 @@ always @(*) begin
                         end
                     end else begin
                             data_out_r = out0_r[counter];
-                            data_out_i = out0_i[counter];                         
+                            data_out_i = out0_i[counter];
 
-                            if (counter == (POINTS-1)) begin
+                            OUT_VALID=1;                         
+
+                            if (counter == 8'd255) begin
                                 ns   = MODE2;
                             end else begin
                                 ns   = MODE1;
@@ -192,16 +227,20 @@ always @(*) begin
                             data_out_i = out1_i[counter];
 
                             reg1_r[counter] = data_in_r ;
-                            reg1_i[counter] = data_in_i ;                        
-                            if (counter == (POINTS-1)) begin
+                            reg1_i[counter] = data_in_i ;
+
+                            OUT_VALID=1;
+
+                            if (counter == 8'd255) begin
                                 ns = MODE3;
                             end else begin
                                 ns = MODE2;
                             end                        
                         end else begin
+                            OUT_VALID=0;
                             reg1_r[counter] = data_in_r ;
                             reg1_i[counter] = data_in_i ;
-                            if (counter == (POINTS-1)) begin
+                            if (counter == 8'd255) begin
                                 ns = MODE3;
                             end else begin
                                 ns = MODE2;
@@ -209,9 +248,11 @@ always @(*) begin
                         end
                     end else begin
                             data_out_r = out1_r[counter];
-                            data_out_i = out1_i[counter];                          
+                            data_out_i = out1_i[counter];
 
-                            if (counter == (POINTS-1)) begin
+                            OUT_VALID=1;                          
+
+                            if (counter == 8'd255) begin
                                 ns   = MODE3;
                             end else begin
                                 ns   = MODE2;
@@ -226,29 +267,34 @@ always @(*) begin
                             data_out_i = out2_i[counter];
 
                             reg2_r[counter] = data_in_r ;
-                            reg2_i[counter] = data_in_i ;                        
-                            if (counter == (POINTS-1)) begin
+                            reg2_i[counter] = data_in_i ;
+
+                            OUT_VALID=1;
+
+                            if (counter == 8'd255) begin
                                 ns   = MODE4;
-                                End_operation = 0;                          
+                                cnt = 2'd2;                        
                             end else begin
                                 ns   = MODE3;
                             end                        
                         end else begin
+                            OUT_VALID=0;
                             reg2_r[counter] = data_in_r ;
                             reg2_i[counter] = data_in_i ;
-                            if (counter == (POINTS-1)) begin
+                            if (counter == 8'd255) begin
                                 ns = MODE4;
+                                cnt=2'd1;
                             end else begin
                                 ns = MODE3;
                             end                        
                         end
                     end else begin
                             data_out_r = out2_r[counter];
-                            data_out_i = out2_i[counter];                         
+                            data_out_i = out2_i[counter];
 
-                            if (counter == (POINTS-1)) begin
-                                SDF_DONE  = 0;
-                                OUT_Done  = 1;
+                            OUT_VALID=1;                         
+
+                            if (counter == 8'd255) begin
                                 OUT_VALID = 0;
                                 ns   = IDLE;
                             end else begin
@@ -274,14 +320,11 @@ always @(*) begin
                     data_out_r      = out3_r[counter];
                     data_out_i      = out3_i[counter];
 
-                    End_operation = 1;
-
                     OUT_VALID = 1;                                                                              
                                                 
-                    if (counter == (POINTS-1) && counter_points !== (N-1)) begin
+                    if (counter == 8'd255 && counter_points != 12'd2047) begin
                         ns = MODE1;
-                    end else if (counter == (POINTS-1) && counter_points == (N-1)) begin 
-                        SDF_DONE = 1;
+                    end else if (counter == 8'd255 && counter_points == 12'd2047) begin 
                         ns = MODE1;                            
                     end else begin
                         ns = MODE4;
