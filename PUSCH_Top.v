@@ -2,6 +2,7 @@ module PUSCH_Top #(parameter WIDTH_IFFT = 26)
     ( 
     input clk,
     input reset,
+    input reset_fft,
     input enable,
 
     // Inputs for CRC
@@ -273,7 +274,7 @@ PingPongMem_MOD #(.MEM_DEPTH(MEM_DEPTH_FFT), .DATA_WIDTH(WIDTH_FFT)) Mod_FFT_Mem
 // FFT
 Top #(.WIDTH(WIDTH_FFT)) FFT_Block (
     .clk(clk_6),
-    .rst(!reset),
+    .rst(reset_fft),
     .di_re(Data_Mod_FFT_r),
     .di_im(Data_Mod_FFT_i),
     .Flag(Modulator_valid),
