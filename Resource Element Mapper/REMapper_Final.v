@@ -234,7 +234,7 @@ end
 assign N_symbol = N_rb * 12 ; // de ghalat el mfrod enha a2l mstnyen rd mostafa
 assign D_symbol = N_rb * 6    ;          // 3dd el dmrs kolha b2a mstnyen rd kareem 
 
-assign Last_indx = N_sc + N_symbol -1 ; 
+assign Last_indx = N_sc + N_symbol  ; 
 
 assign write_enable = EN_Counter ; 
 
