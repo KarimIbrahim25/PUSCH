@@ -56,7 +56,7 @@ module PingPongMemory #(
             end
         end
         else if (Sym_Done) begin
-            if(!use_ping) begin 
+            if(use_ping) begin 
                 for (i = 0; i < MEM_DEPTH; i = i + 1) begin
                     ping[i] <=0 ;
                 end
