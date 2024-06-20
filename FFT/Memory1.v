@@ -26,8 +26,13 @@ pulse_gen Pulse_in_mem(
     .rst(rst),
     .enable(sig)
 );
-always@(posedge clk) begin
-    if (sig) begin
+always@(posedge clk or posedge rst) begin
+    if (rst) begin
+        fft_done_path2<=0;
+    end
+    else if(done) 
+        fft_done_path2<=0;
+    else if (sig) begin
         fft_done_path2<=fft_done_path2==pow5?0:fft_done_path2+1;
     end
     else if (!(columns_write!=pow3x5-1) && !( (|pow5)&&fft_done_path2==pow5-1))
@@ -38,8 +43,6 @@ always@(posedge clk) begin
 end
 always @ (posedge clk or posedge rst) begin
     if (rst) begin
-        out_re<=0;
-        out_im <= 0;
         rows_read<=0;
         rows_write<=0;
         columns_read<=0;
@@ -49,19 +52,18 @@ always @ (posedge clk or posedge rst) begin
         read<=0;
         idle<=1;
         full2<=0;
-        fft_done_path2=0;
-        //  for (i = 0; i < 256; i = i + 1) begin
-        //     for (j = 0; j < 225; j = j + 1) begin
-        //         mem_re[i][j] <= {WIDTH{1'b0}};
-        //         mem_im[i][j] <= {WIDTH{1'b0}};
+        
+        //   for (i = 0; i < 256; i = i + 1) begin
+        //      for (j = 0; j < 225; j = j + 1) begin
+        //          mem_re[i][j] <= {WIDTH{1'b0}};
+        //          mem_im[i][j] <= {WIDTH{1'b0}};
  
-        //     end
-        // end
+        //      end
+        //  end
     end else begin
     if (done || comp) begin
         comp<=1; 
         idle<=0;
-        fft_done_path2<=0;
         if(~(columns_read==pow3x5)) begin
             if (rows_read!=pow2-1 ) begin
                 rows_read<=rows_read+1;
@@ -173,6 +175,11 @@ always @ (*) begin
     out_re = saved || full2 ? mem_re[rows_write][columns_write]:0;
     out_im = saved || full2 ? mem_im[rows_write][columns_write]:0;
 end
+
+// always @(posedge clk) begin
+//     read <= saved && columns_write<pow3x5 || fft_done && saved || fft_done && full2 ?1:0;
+// end         
+endmodule
 
 // always @(posedge clk) begin
 //     read <= saved && columns_write<pow3x5 || fft_done && saved || fft_done && full2 ?1:0;
