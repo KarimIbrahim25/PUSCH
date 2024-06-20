@@ -168,19 +168,31 @@ reg [7:0] fft_from5_to3_counter;
 
 wire pulse3;
 
-wire done;
+reg done;
 
-pulse_gen P0(
-    
-        .bus_enable(done_slow),
-    
-        .clk(clk),
-    
-        .rst(rst),
-    
-        .enable(done)
-    
-    );
+reg [2:0] edge_counter;
+
+always @(posedge clk or posedge rst) begin
+    if(rst) begin
+        edge_counter <= 0;
+        done <= 0;
+    end 
+
+    else if (edge_counter == 3) begin
+        edge_counter <= 0;
+        done <= done_slow;
+    end
+
+    else if (done_slow) begin
+        edge_counter <= edge_counter + 1;
+        done <= 0;
+    end
+
+    else begin
+        edge_counter <= 0;
+        done <= 0;
+    end
+end
 
 which_stages which_stage(
 
