@@ -5,7 +5,8 @@ module IFFT_CP_TOP # (parameter WIDTH = 26)
  input   wire rst,
  input   wire [WIDTH-1:0] data_in_r,
  input   wire [WIDTH-1:0] data_in_i,
- input   wire VALID,
+ input   wire VALID_R,
+ input   wire VALID_I,
 
  output wire READy_out,
  output  wire [WIDTH-1:0] data_out_r,
@@ -32,7 +33,8 @@ SDF2_TOP # (.WIDTH(26) ) u0(
     .rst(rst),
     .data_in1_r(data_in_r),
     .data_in1_i(data_in_i),
-    .VALID(VALID),    
+    .VALID_R(VALID_R),
+    .VALID_I(VALID_I),    
     .READy_out(fft_valid),
     .IFFT_mem_address(MEM_address),    
     .data_out1_r(fft_r),
@@ -72,8 +74,8 @@ CyclicPrefix # (.WIDTH(26), .IFFT_SIZE(2048), .N_SYMB(14), .N_SUBFRAME(1), .NCP1
     .OUT_VALID(READy_out),         
     .data_in_r(MEM_r),          ////
     .data_in_i(MEM_i),          ////
-    .data_out_r(cp_r),
-    .data_out_i(cp_i) 
+    .data_out_r(data_out_r),
+    .data_out_i(data_out_i) 
     );
 
 endmodule
