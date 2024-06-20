@@ -33,8 +33,11 @@ always @(posedge clk or negedge rst) begin
     end else begin
         if (enable) begin
             if (VALID == 1) begin
-                counter   <= counter + 1;                    
+                counter   <= counter + 1;
+                //counter1   <= counter1 + 1;
+                OUT_VALID <= 1;                    
             end else begin /// valid = 0
+                //counter1<=counter1;
                 if (counter1 == 1 || counter1 == 8) begin
                     if(counter == 2207) begin                    
                         counter   <= 0;
@@ -45,7 +48,7 @@ always @(posedge clk or negedge rst) begin
                     end else begin
                         counter   <= counter + 1;                    
                     end
-                end else begin // cnt
+                end else begin // cnt                   
                     if(counter == 2191) begin                    
                         counter   <= 0;
                         OUT_VALID <= 0;
@@ -59,7 +62,7 @@ always @(posedge clk or negedge rst) begin
             end                
         end else begin  // enable = 0 
             counter  <= 0;
-            counter1 <= 0;
+            //counter1 <= 0;
         end
 
     end
@@ -67,40 +70,39 @@ end
 
 //  Comp always
 always @(*) begin
+    counter1=counter1;
+    serial_out_r=serial_out_r;
+    serial_out_i=serial_out_i;
+    if (!rst) begin
+        counter1=0;
+    end else begin
+
     if (VALID) begin
-        mem_out_r[address] = serial_in_r;
-        mem_out_i[address] = serial_in_r;
-        serial_out_r       = mem_out_r[address];
-        serial_out_i       = mem_out_i[address];
+        mem_out_r[counter] = serial_in_r;
+        mem_out_i[counter] = serial_in_i;
+        serial_out_r       = mem_out_r[counter];
+        serial_out_i       = mem_out_i[counter];
         enable = 1;
         OUT_VALID = 1;
-        if (address == 0) begin
+        if (counter == 0) begin
             counter1   = counter1 + 1;
         end else begin
             counter1   = counter1;
         end
      end else begin
-        mem_out_r[address] = 0;
-        mem_out_i[address] = 0;
+        // if (address == 0) begin
+        //     counter1   = counter1;
+        // end else begin
+        //     counter1   = counter1;
+        // end
+        serial_out_r=serial_out_r;
+        serial_out_i=serial_out_i;        
+        mem_out_r[counter] = mem_out_r[counter];
+        mem_out_i[counter] = mem_out_i[counter];
+        //counter1   = counter1;
         // OUT_VALID = 0;         
-     end   
+     end
+    end   
 end
 
 endmodule
-
-            // if (counter1 == 14) begin
-            //     counter   <= 0;
-            // end else if (counter1 == 0 || counter1 == 7) begin
-            //     if(counter == 2207) begin                    
-            //         counter   <= 0;
-            //         // counter1  <= counter1 + 1;                     
-            //     end else begin
-            //         counter   <= counter + 1;                    
-            //     end  
-            // end else begin
-            //     if(counter == 2191) begin                    
-            //         counter   <= 0;
-            //         // counter1  <= counter1 + 1;                     
-            //     end else begin
-            //         counter   <= counter + 1;                    
-            //     end
