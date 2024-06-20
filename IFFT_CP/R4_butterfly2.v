@@ -1,4 +1,4 @@
-module R4_butterfly2 # (parameter WIDTH = 26 , POINTS = 64 , N = 2048)
+module R4_butterfly3 # (parameter WIDTH = 26 , POINTS = 16 , N = 2048)
   (
   input wire clk, rst,
   input signed [WIDTH-1:0] data_in_r,
@@ -75,7 +75,7 @@ if (cs==IDLE) begin
             end
         end else if (cs == MODE1 || cs == MODE2 || cs == MODE3 || cs == MODE4 || cs == IDLE) begin
             if (cnt==2'd1) begin
-                if (counter == 8'd63) begin
+                if (counter == 8'd15) begin
                     counter <= 0;
                     SDF_DONE<=1;     
                 end else begin
@@ -84,7 +84,7 @@ if (cs==IDLE) begin
                 end
             end else begin
                 SDF_DONE <=0;
-                if (counter == 8'd63) begin
+                if (counter == 8'd15) begin
                     counter <= 0;    
                 end else begin
                     counter <= counter + 1;
@@ -103,24 +103,24 @@ if (cs==IDLE) begin
 
         if (cs==MODE1 && OUT_VALID) begin
             End_operation <= 1;
-            if (radix_address == 4*(12'd63)) begin
+            if (radix_address == 16*(12'd15)) begin
                 radix_address <= 0;
             end else begin
-                radix_address <= radix_address + 4;
+                radix_address <= radix_address + 16;
             end
         end else if (cs==MODE2 && OUT_VALID) begin
             End_operation <= 1;
-            if (radix_address == 8*(12'd63)) begin
+            if (radix_address == 32*(12'd15)) begin
                 radix_address <= 0;
             end else begin
-                radix_address <= radix_address + 8;
+                radix_address <= radix_address + 32;
             end
         end else if (cs==MODE3 && OUT_VALID) begin
             End_operation <= 1;
-            if (radix_address == 12*(12'd63)) begin
+            if (radix_address == 48*(12'd15)) begin
                 radix_address <= 0;
             end else begin
-                radix_address <= radix_address + 12;
+                radix_address <= radix_address + 48;
             end
         end else if (cs==MODE4 && OUT_VALID) begin
             End_operation <= 1;
@@ -184,7 +184,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                             OUT_VALID=1;
                          
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns   = MODE2;
                             end else begin
                                 ns   = MODE1;
@@ -193,7 +193,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
                             OUT_VALID=0;
                             reg0_r[counter] = data_in_r ;
                             reg0_i[counter] = data_in_i ;
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns = MODE2;
                             end else begin
                                 ns = MODE1;
@@ -205,7 +205,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                             OUT_VALID=1;                         
 
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns   = MODE2;
                             end else begin
                                 ns   = MODE1;
@@ -224,7 +224,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                             OUT_VALID=1;
 
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns = MODE3;
                             end else begin
                                 ns = MODE2;
@@ -233,7 +233,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
                             OUT_VALID=0;
                             reg1_r[counter] = data_in_r ;
                             reg1_i[counter] = data_in_i ;
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns = MODE3;
                             end else begin
                                 ns = MODE2;
@@ -245,7 +245,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                             OUT_VALID=1;                          
 
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns   = MODE3;
                             end else begin
                                 ns   = MODE2;
@@ -265,7 +265,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
                             OUT_VALID = 1;
 
 
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns   = MODE4;                          
                             end else begin
                                 ns   = MODE3;
@@ -274,7 +274,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
                             OUT_VALID=0;
                             reg2_r[counter] = data_in_r ;
                             reg2_i[counter] = data_in_i ;
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 ns = MODE4; 
                             end else begin
                                 ns = MODE3;
@@ -286,7 +286,7 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                             OUT_VALID=1;                         
 
-                            if (counter == 8'd63) begin
+                            if (counter == 8'd15) begin
                                 OUT_VALID = 0;
                                 ns   = IDLE;
                             end else begin
@@ -314,9 +314,9 @@ for (i = 0; i < POINTS; i = i + 1) begin
 
                     OUT_VALID = 1;                                                                              
                                                 
-                    if (counter == 8'd63 && counter_points != 12'd2047) begin
+                    if (counter == 8'd15 && counter_points != 12'd2047) begin
                         ns = MODE1;
-                    end else if (counter == 8'd63 && counter_points == 12'd2047) begin 
+                    end else if (counter == 8'd15 && counter_points == 12'd2047) begin 
                         ns = MODE1;
                         cnt = 1;                              
                     end else begin
