@@ -41,19 +41,19 @@ always @(posedge clk or negedge rst) begin
          // counter4  <= 0;
          counter5  <= 0;
          ready     <= 0;
-        for (i = 0; i < N_SYMB*N_SUBFRAME; i = i + 1) begin    
-            for (j = 0; j < IFFT_SIZE; j = j + 1) begin
-                memory_r[i][j] <= 0;
-                memory_i[i][j] <= 0;           
-            end
-        end
+        // for (i = 0; i < N_SYMB*N_SUBFRAME; i = i + 1) begin    
+        //     for (j = 0; j < IFFT_SIZE; j = j + 1) begin
+        //         memory_r[i][j] <= 0;
+        //         memory_i[i][j] <= 0;           
+        //     end
+        // end
     end else begin         
             if (counter4 == 1 || counter4 == 8) begin
                 if (VALID) begin
                     if (valid_in) begin
                         counter <= counter +1;
                     end else begin
-                        counter <= 0;
+                        counter <= counter;
                     end
                     counter3 <= 0;          
                 end else begin
@@ -79,7 +79,7 @@ always @(posedge clk or negedge rst) begin
                     if (valid_in) begin
                         counter <= counter +1;
                     end else begin
-                        counter <= 0;
+                        counter <= counter;
                     end
                     counter2 <= 0;          
                 end else begin
@@ -105,13 +105,27 @@ end
 // Comp always
 always @(*)
   begin
+    if (!rst) begin
+        for (i = 0; i < N_SYMB*N_SUBFRAME; i = i + 1) begin    
+            for (j = 0; j < IFFT_SIZE; j = j + 1) begin
+                memory_r[i][j] = 0;
+                memory_i[i][j] = 0;           
+            end
+        end
+        // data_out_r <=0;
+        // data_out_r <=0;
+    end else begin
+    data_out_r = 0;
+    data_out_i = 0;
+    OUT_VALID =0;
+
     if (valid_in) begin
         memory_r[counter4-1][counter] = data_in_r;                           // mem[1-14][0-2048]
         memory_i[counter4-1][counter] = data_in_i;
-        ready = 1; 
+        ready = 1;
     end else begin
         memory_r[counter4-1][counter] = memory_r[counter4-1][counter];                           
-        memory_i[counter4-1][counter] = memory_i[counter4-1][counter];     
+        memory_i[counter4-1][counter] = memory_i[counter4-1][counter];
     end
     if (counter4 == 1 || counter4 == 8) begin  
             if (counter < 1888) begin
@@ -156,12 +170,12 @@ always @(*)
             end            
         end
     end else begin
-        data_out_r =data_out_r;
-        data_out_i =data_out_i;
+        data_out_r =0;
+        data_out_i =0;
         OUT_VALID = 0;
     end
 
-
+  end//
 end  
 
 endmodule
