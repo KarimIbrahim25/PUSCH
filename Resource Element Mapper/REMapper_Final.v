@@ -159,7 +159,7 @@ always @(*) begin
             end
         end     
         WAIT_FFT : begin 
-            if(FFT_Done)begin
+            if(Counter == Last_indx)begin
                 EN_Counter = 0 ; 
             end else begin 
                 EN_Counter = 1 ;       // condition ti write fft but dmrs is not done yet 
@@ -185,7 +185,7 @@ always @(*) begin
         end   
 
         Map_FFT : begin    
-            if(FFT_Done)begin
+            if(Counter == Last_indx)begin
                 EN_Counter = 0 ; 
             end else begin 
                 EN_Counter = 1 ;       // condition ti write fft but dmrs is not done yet 
