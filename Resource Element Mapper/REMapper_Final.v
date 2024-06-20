@@ -65,12 +65,6 @@ always @(*) begin
         end 
         else if ((FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
             next_state = Map_FFT; 
-            RE_Real = FFT_I ; 
-            RE_Imj = FFT_Q ; 
-            Wr_addr =  FFT_addr + N_sc ; 
-            RE_Valid_OUT = 0 ; 
-            EN_Counter = 0 ; 
-
         end 
         else begin
             next_state = IDLE;
@@ -165,6 +159,15 @@ always @(*) begin
             Wr_addr = 1'b0 ;  
             RE_Imj = 0 ; 
             RE_Real = 0 ; 
+        
+            if ((FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
+            next_state = Map_FFT; 
+            RE_Real = FFT_I ; 
+            RE_Imj = FFT_Q ; 
+            Wr_addr =  FFT_addr + N_sc ; 
+            RE_Valid_OUT = 0 ; 
+            EN_Counter = 0 ; 
+            end
         end   
 
         Map_FFT : begin    
