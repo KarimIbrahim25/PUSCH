@@ -166,7 +166,7 @@ always @(*) begin
             RE_Imj = FFT_Q ; 
             Wr_addr =  FFT_addr + N_sc ; 
             RE_Valid_OUT = 0 ; 
-            EN_Counter = 0 ; 
+            EN_Counter = 1 ; 
             end
         end   
 
