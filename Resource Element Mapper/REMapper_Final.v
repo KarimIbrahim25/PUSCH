@@ -77,9 +77,6 @@ always @(*) begin
             end else begin
                 next_state = WAIT_FFT; 
             end
-         else begin
-            next_state = WAIT_FFT; 
-        end
     end    
     WAIT_FFT : begin 
       if ( (FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
@@ -166,7 +163,7 @@ always @(*) begin
                 RE_Imj = FFT_Q ; 
                 Wr_addr = FFT_addr + N_sc ;
                 RE_Valid_OUT = 1 ; 
-            if (Counter > Last_indx-1) begin
+            if (Counter == Last_indx) begin
                 Symbol_now = Symbol_now + 1 ; 
                 Sym_Done = 1 ; 
             end else begin
