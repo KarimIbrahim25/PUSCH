@@ -25,32 +25,33 @@ module RateMatching_and_HARQ (
     reg [127:0] mem7 [0:NUM_ROWS-1][0:NUM_COLS-1];
     reg [127:0] mem8 [0:NUM_ROWS-1][0:NUM_COLS-1];
 
-    reg [14:0] k0;
+    reg [14:0] k0;                              
     reg [14:0] RVs_base_graph_1 [0:3];
     reg [14:0] RVs_base_graph_2 [0:3];
     reg [1:0] RV_ID;
     reg [1:0] RV_ID_counter;
     reg [1:0] RV_ID_array [0:3];
 
-    reg [14:0] index;               // temp variable to save the starting point of the RV (KO)
-    reg [4:0] row_index;            // row number starting point
-    reg [3:0] column_index;         // coloumn number starting point
-    reg [7:0] bit_index;            // bit number starting point
+    reg [14:0] index;                               // temp variable to save the starting point of the RV (KO)
+    reg [4:0] row_index;                            // row number starting point
+    reg [3:0] column_index;                         // coloumn number starting point
+    reg [7:0] bit_index;                            // bit number starting point
 
-    reg [4:0] write_addr_row;       // Write address row
-    reg [3:0] write_addr_col;       // Write address column
-    reg [7:0] write_addr_bit;       // write address bit
-    reg [4:0] read_addr_row;        // Read address row
-    reg [3:0] read_addr_col;        // Read address column
-    reg [7:0] read_addr_bit;        // Read address bit
-    reg [31:0] write_counter;       // Counter for tracking total data bits written
-    reg [31:0] read_counter;        // Counter for tracking total data bits read
+    reg [4:0] write_addr_row;                       // Write address row
+    reg [3:0] write_addr_col;                       // Write address column
+    reg [4:0] read_addr_row;                        // Read address row
+    reg [3:0] read_addr_col;                        // Read address column
+    reg [7:0] read_addr_bit;                        // Read address bit
+    reg [31:0] write_counter;                       // Counter for tracking total data bits written
+    reg [31:0] reach_to_max_data_size_reg;          // Counter for tracking total data bits read
 
-    reg [31:0] cycle_counter;
-    reg [16:0] starting_value;      // to save the count (easy debug purpose)
-    reg [9:0] cycle_repeat;        // reg to determine number of repeated cycles in the repetation case
+    reg [31:0] cycle_counter;                       // to ciunt the number of cycles (can't exceed G)
+    reg [16:0] starting_value;                      // to save the count (easy debug purpose)
+    reg [9:0] cycle_repeat;                         // reg to determine number of repeated cycles in the repetation case
     
-    reg enable_read_flag;
+    reg enable_read_flag;                           // to enable the reading process
+    reg [23:0] data_out_reg;                        // for verification purposes
+
     always @(posedge clk or negedge rst) 
     begin
         if (!rst)
@@ -61,10 +62,11 @@ module RateMatching_and_HARQ (
                 read_addr_row <= 0;
                 read_addr_col <= 0;
                 read_addr_bit <= 0;                
-                read_counter <= 1;
+                reach_to_max_data_size_reg <= 1;
                 op_RV_bit <= 0;
                 valid_out <= 0;
                 cycle_counter <= 0;
+                data_out_reg <= 0;
 /*
                 RVs_base_graph_1[0] <= 0;
                 RVs_base_graph_1[1] <= 0;
@@ -148,19 +150,21 @@ module RateMatching_and_HARQ (
                                 valid_out <= 1;
                                 
                                 // updating the reading addresses 
-                                if ( (RV_ID_counter == 0) && (read_addr_col == 0) && (read_addr_row == 0) && (read_addr_bit == 0) ) // =1 to not enter the if condition of %(data_size) as 0%data_size = 0
+                                if ( (RV_ID_counter == 0) && (read_addr_col == 0) && (read_addr_row == 0) && (read_addr_bit == 0) ) 
                                     begin
                                         // Initial assignment
-                                        read_addr_col <= column_index; //3
-                                        read_addr_row <= row_index; //1
-                                        read_addr_bit <= bit_index; //36
+                                        read_addr_col <= column_index;
+                                        read_addr_row <= row_index; 
+                                        read_addr_bit <= bit_index; 
+                                        reach_to_max_data_size_reg <= bit_index + 1;
                                         cycle_repeat  <= 0;
                                     end
-                                else if (read_counter % (data_size) == 0)
+                                else if (reach_to_max_data_size_reg % (data_size) == 0)
                                     begin
                                         read_addr_row <= 0;
                                         read_addr_col <= 0; 
                                         read_addr_bit <= 0;
+                                        reach_to_max_data_size_reg <= 1;
                                         cycle_repeat  <= cycle_repeat + 1;
                                         cycle_counter <= cycle_counter + 1;                                       
                                     end
@@ -193,36 +197,44 @@ module RateMatching_and_HARQ (
                                     end
 
                                 // sending the RV_ID first 
-                                if (RV_ID_counter < 1) // the RV_ID is only 2 bits so this if condition will only applied twice 0,1 
+                                if (RV_ID_counter < 1) 
                                     begin
                                         case (RV)
                                             0:
                                             begin
                                                 op_RV_bit <= 0;
-                                                read_counter  <= starting_value + 1;
-                                                cycle_counter <= cycle_counter + 1;
+                                                data_out_reg [cycle_counter] <= 0;
+                                                @(posedge clk);
+                                                op_RV_bit <= 0;
+                                                data_out_reg [cycle_counter + 1] <= 0;
+                                                cycle_counter <= cycle_counter + 2;
                                             end
                                             1:
                                             begin
                                                 op_RV_bit <= 1;
-                                                read_counter  <= starting_value + 1;
-                                                cycle_counter <= cycle_counter + 1;
+                                                data_out_reg [cycle_counter] <= 1;
+                                                @(posedge clk);
+                                                op_RV_bit <= 0;
+                                                data_out_reg [cycle_counter + 1] <= 0;
+                                                cycle_counter <= cycle_counter + 2;
                                             end 
                                             2:
                                             begin
                                                 op_RV_bit <= 0;
+                                                data_out_reg [cycle_counter] <= 0;
                                                 @(posedge clk);
                                                 op_RV_bit <= 1;
-                                                read_counter  <= starting_value + 2;
+                                                data_out_reg [cycle_counter + 1] <= 1;                                                
                                                 cycle_counter <= cycle_counter + 2;
                                             end 
                                             3:
                                             begin
                                                 op_RV_bit <= 1;
+                                                data_out_reg [cycle_counter] <= 1;
                                                 @(posedge clk);
                                                 op_RV_bit <= 1;
-                                                read_counter  <= starting_value + 1;
-                                                cycle_counter <= cycle_counter + 1;
+                                                data_out_reg [cycle_counter + 1] <= 1;
+                                                cycle_counter <= cycle_counter + 2;
                                             end 
                                         endcase        
                                         RV_ID_counter = RV_ID_counter +1;
@@ -230,7 +242,10 @@ module RateMatching_and_HARQ (
                                 else // sending the data
                                     begin
                                         case (PN)
-                                            1:op_RV_bit <= mem1[read_addr_row][read_addr_col][read_addr_bit]; 
+                                            1: begin 
+                                                op_RV_bit <= mem1[read_addr_row][read_addr_col][read_addr_bit]; 
+                                                data_out_reg [cycle_counter] <=  mem1[read_addr_row][read_addr_col][read_addr_bit];
+                                            end
                                             2:op_RV_bit <= mem2[read_addr_row][read_addr_col][read_addr_bit]; 
                                             3:op_RV_bit <= mem3[read_addr_row][read_addr_col][read_addr_bit]; 
                                             4:op_RV_bit <= mem4[read_addr_row][read_addr_col][read_addr_bit]; 
@@ -240,7 +255,10 @@ module RateMatching_and_HARQ (
                                             8:op_RV_bit <= mem8[read_addr_row][read_addr_col][read_addr_bit]; 
                                         endcase 
 
-                                        read_counter <= read_counter + 1;  
+                                        if (reach_to_max_data_size_reg % (data_size) == 0)
+                                            reach_to_max_data_size_reg <= 1;
+                                        else 
+                                            reach_to_max_data_size_reg <= reach_to_max_data_size_reg + 1;  
                                         cycle_counter <= cycle_counter + 1; 
                                     end                                                                   
                             end
@@ -250,7 +268,7 @@ module RateMatching_and_HARQ (
                                 read_addr_row <= 0;
                                 read_addr_col <= 0;
                                 read_addr_bit <= 0;
-                                read_counter <= 0;
+                                reach_to_max_data_size_reg <= 1;
                                 valid_out <= 0;
                                 cycle_repeat <= 0;
                                 enable_read_flag <= 0;
