@@ -212,17 +212,6 @@ always @(posedge clk or posedge rst ) begin
         end
     
 end
-pulse_gen P0(
-    
-        .bus_enable(done_slow),
-    
-        .clk(clk),
-    
-        .rst(rst),
-    
-        .enable(done)
-    
-    );
 
 which_stages which_stage(
 
