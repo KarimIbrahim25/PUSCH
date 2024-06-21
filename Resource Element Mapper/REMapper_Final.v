@@ -10,7 +10,6 @@ module REmapper_new #(parameter FFT_Len =18  ,parameter DMRS_Len = 9 )(
 
     input wire signed [DMRS_Len-1:0]Dmrs_I , 
     input wire signed [DMRS_Len-1:0]Dmrs_Q ,
-    input wire DMRS_Valid_In ,
     input wire DMRS_Done ,
 
     input wire signed [FFT_Len-1:0] FFT_I , 
@@ -88,15 +87,16 @@ always @(*) begin
     Map_FFT: begin 
         if ( (FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End) && Counter >= N_sc && Counter <= Last_indx) begin    
                 next_state = Map_FFT; 
-            end else if (Symbol_now < Sym_End+1) begin
+        end else if (Symbol_now < Sym_End+1) begin
                 next_state = WAIT_FFT;  
-            end
-            else
-                next_state = IDLE; 
+        end
+        else
+            next_state = IDLE; 
 
     end 
 
- default: next_state = IDLE;
+    default: next_state = IDLE;
+  
   endcase
 
 end    
@@ -175,11 +175,10 @@ always @(*) begin
             RE_Real = 0 ; 
         
             if ((FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
-            next_state = Map_FFT; 
             RE_Real = FFT_I ; 
             RE_Imj = FFT_Q ; 
             Wr_addr =  FFT_addr + N_sc ; 
-            RE_Valid_OUT = 0 ; 
+            RE_Valid_OUT = 1 ; 
             EN_Counter = 1 ; 
             end
         end   
@@ -205,7 +204,7 @@ always @(*) begin
              
         end    
  
-        default : current_state = IDLE ; 
+       // default : current_state = IDLE ; 
      endcase    
 end
 // tyb 3shan mn3mlsh delay kbeer hnkhleh yktb el zeros mn el awel ely abl sib carrier starting point 
