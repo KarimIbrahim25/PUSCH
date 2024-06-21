@@ -3,7 +3,6 @@ module Gold_Gen(
     input wire CLK_PR_new , 
     input wire CLK_PR , 
     input wire RST_PR , 
-    input wire EN_PR , 
     input wire Config , // Higher Layer Parameter is Configured --> 1 else --> 0 
     input wire Shift , 
     input wire [9:0] N_cellID,
@@ -34,10 +33,9 @@ always @(posedge CLK_PR_new or negedge RST_PR)  begin
         X2 <= 31'b0 ;
         n <= 0 ; 
         Shift_end <= 0 ; 
-    //    Gold_Seq <= 'b0 ; 
         GOLD_VALID <= 0 ; 
 
-    end  else if (EN_PR && !Shift && !OUT_Enable) begin
+    end  else if ( !Shift && !OUT_Enable) begin
         X1 <=  X1_initialCond ;
         X2 <= {'b0 , C_init } ;
         n <= 0 ;
@@ -46,22 +44,18 @@ always @(posedge CLK_PR_new or negedge RST_PR)  begin
 
     end
 
-    else if (EN_PR && Shift && ! OUT_Enable) begin  
+    else if (Shift && ! OUT_Enable) begin  
         
         GOLD_VALID <= 0 ; 
         if ( n < Nc) begin
-     //       Feedback_X1 <= X1[3] ^ X1[0] ;
             X1 <= X1 >> 1 ;
             X1[Seq_Len-1] <= Feedback_X1 ;
 
-      //      Feedback_X2 <= X2[3]^X2[2]^X2[1]^X2[0] ; 
             X2 <= X2 >> 1 ;
             X2[Seq_Len-1] <= Feedback_X2 ;
 
             n <= n+1 ; 
             
-              // scrambling bit 
-
         end   
         else  begin
             Shift_end <= 1 ; 
@@ -79,12 +73,8 @@ end
                 X2[Seq_Len-1] <= Feedback_X2 ;    
                 
                 GOLD_VALID <=1 ; 
-
-        //end
         end
-        //else begin 
-                //GOLD_VALID <= 0 ;  
-        //end    
+   
 end
 
 
