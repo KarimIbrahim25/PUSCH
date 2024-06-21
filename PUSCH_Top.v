@@ -46,8 +46,8 @@ module PUSCH_Top #(parameter WIDTH_IFFT = 26)
 // Valids of each block
 wire CRC_valid, LDPC_valid, HARQ_valid, Interleaver_valid, Scrambler_valid,
      Modulator_valid, DMRS_valid, FFT_valid, IFFT_valid;
-
-
+wire Busy ; 
+wire Done_REG ; 
 wire clk_16, clk_6, clk_8;
 
 // Parameters for each block
@@ -101,6 +101,7 @@ wire Mod_done;
 wire wrt_enable_Mod;
 wire [10:0] Wr_addr_Mod;
 wire [10:0] Last_addr_Mod;
+wire [10:0] Last_addr_Mod_reg;
 
 // Between PinPong Memory and FFT 
 wire signed [WIDTH_FFT-1:0] Data_Mod_FFT_i, Data_Mod_FFT_r;
@@ -203,7 +204,6 @@ SC_TOP Scrambler_Block (
     .CLK_TOP(clk_16) ,
     .CLK_TOP_new(clk) , 
     .RST_TOP(reset) , 
-    .EN_TOP(zeyad_enable) , 
     .Shift_TOP(zeyad_enable) , 
     .Config_TOP(Config) , // Higher Layer Parameter is Configured --> 1 else --> 0 
     .N_cellID_TOP(N_cell_ID),
@@ -233,8 +233,11 @@ Mapper_TOP#(.LUT_WIDTH(LUT_WIDTH), .OUT_WIDTH(OUT_WIDTH)) Mapper_Block (
     .MOD_DONE(Mod_done) , 
     .Wr_addr(Wr_addr_Mod) ,
     .Last_addr(Last_addr_Mod), 
+    .Last_addr_reg(Last_addr_Mod_reg), 
+
     .write_enable(wrt_enable_Mod) ,
-    .PINGPONG_SWITCH(PINGPONG_SWITCH) 
+    .PINGPONG_SWITCH(PINGPONG_SWITCH) , 
+    .Done_REG(Done_REG) 
 );
 
 
@@ -247,6 +250,7 @@ PingPongMem_MOD #(.MEM_DEPTH(MEM_DEPTH_FFT), .DATA_WIDTH(WIDTH_FFT)) Mod_FFT_Mem
     .data_in(Data_Mod_Mem_r),
     .Last_addr(Last_addr_Mod),
     .write_enable(wrt_enable_Mod),
+    .BUSY(BUSY)  ,
     .Mod_Valid_OUT(Modulator_valid) ,
     .PINGPONG_SWITCH(PINGPONG_SWITCH) ,  
     .MOD_DONE(Mod_done) ,
@@ -265,11 +269,13 @@ PingPongMem_MOD #(.MEM_DEPTH(MEM_DEPTH_FFT), .DATA_WIDTH(WIDTH_FFT)) Mod_FFT_Mem
     .Last_addr(Last_addr_Mod),
     .write_enable(wrt_enable_Mod),
     .Mod_Valid_OUT(Modulator_valid) ,
-    .PINGPONG_SWITCH(PINGPONG_SWITCH) ,  
+    .PINGPONG_SWITCH(PINGPONG_SWITCH) ,
+    .BUSY(BUSY)  ,
     .MOD_DONE(Mod_done) ,
     .write_addr(Wr_addr_Mod),  // External write address input
     .data_out(Data_Mod_FFT_i)  // Output data
 );
+
 
 
 // FFT
@@ -279,13 +285,14 @@ Top #(.WIDTH(WIDTH_FFT)) FFT_Block (
     .di_re(Data_Mod_FFT_r),
     .di_im(Data_Mod_FFT_i),
     .Flag(Modulator_valid),
-    .done_slow(Mod_done),
+    .done_slow(Done_REG),
     .do_re(Data_FFT_REM_r),
     .do_im(Data_FFT_REM_i),
     .do_en(FFT_valid),
     .address(Write_addr_FFT),
-    .last_address(Last_addr_Mod+1'b1),
-    .Finish(FFT_done)
+    .last_address(Last_addr_Mod_reg+1'b1),
+    .Finish(FFT_done) , 
+    .Busy(Busy)
 );
 
 
@@ -333,7 +340,6 @@ REM_TOP #(.MEM_DEPTH(MEM_DEPTH_IFFT), .WRITE_ADDR_SHIFT(WRITE_ADDR_SHIFT),
 
     .Dmrs_I_TOP(DMRS_r_mem) , 
     .Dmrs_Q_TOP(DMRS_i_mem) ,
-    .DMRS_Valid_In_TOP(DMRS_valid) ,
     .DMRS_Done_TOP(DMRS_finished) ,
 
     .FFT_I_TOP(Data_FFT_REM_r) , 
