@@ -39,6 +39,7 @@ module RateMatching_and_HARQ (
 
     reg [4:0] write_addr_row;                       // Write address row
     reg [3:0] write_addr_col;                       // Write address column
+    reg [7:0] write_addr_bit;                       // write address bit
     reg [4:0] read_addr_row;                        // Read address row
     reg [3:0] read_addr_col;                        // Read address column
     reg [7:0] read_addr_bit;                        // Read address bit
