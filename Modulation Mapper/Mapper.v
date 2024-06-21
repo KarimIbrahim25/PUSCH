@@ -23,7 +23,8 @@ module Mod_Mapper#(parameter LUT_WIDTH = 18 , parameter OUT_WIDTH = 34 )(
     output reg [10:0] Last_addr , 
     output reg signed [LUT_WIDTH-1:0] Mod_OUT_I , 
     output reg signed [LUT_WIDTH-1:0] Mod_OUT_Q , 
-
+    output reg Done_REG , 
+    output reg [10:0] Last_addr_reg , 
     output reg PINGPONG_SWITCH 
 
 );
@@ -32,7 +33,6 @@ reg [2:0] Counter ;
 reg signed [OUT_WIDTH-1:0] I_reg ;
 reg signed [OUT_WIDTH-1:0] Q_reg ;
 reg [3:0] PingPong_Counter ;
-reg [10:0] Last_addr_reg ;  
 reg Valid_reg ;  
 
 localparam signed [LUT_WIDTH-1:0] QPSK_Fac =  'd724;
@@ -60,7 +60,7 @@ always@(posedge CLK_Mod) begin
    end
 end
 
-always@(posedge CLK_Mod) begin
+always@(posedge CLK_Mod or negedge RST_Mod) begin
    if(!RST_Mod) begin 
         PingPong_Counter <= 0 ; 
         MOD_DONE <= 0 ;   
@@ -129,10 +129,6 @@ always@(posedge CLK_Mod or negedge RST_Mod) begin
         Mod_Valid_OUT <= 0 ; 
  
     end    
-  else if (Wr_addr == 1200) begin
-            Wr_addr <= 0 ; 
-            Mod_Valid_OUT <= 0 ; 
-  end
   else if (Valid_Mod_IN & !MOD_DONE) begin
      if (Flag)begin
         case(Order_Mod)
@@ -211,7 +207,7 @@ end
 always@(posedge CLK_Mod  or negedge RST_Mod) begin 
     if(!RST_Mod)
         write_enable <= 0 ; 
-    else if(!MOD_DONE)
+    else if(!MOD_DONE && Valid_Mod_IN)
         write_enable <= 1 ;
      else
         write_enable <= 0 ;    
@@ -226,4 +222,18 @@ always@(posedge CLK_Mod  or negedge RST_Mod) begin
         Valid_reg <= 0 ;    
 end
 
+always@(posedge CLK_Mod  or negedge RST_Mod) begin 
+    if(!RST_Mod) begin 
+        Done_REG <= 0 ; 
+    end else begin 
+        Done_REG <= MOD_DONE ;
+    end    
+end
+always@(posedge CLK_Mod  or negedge RST_Mod) begin 
+    if(!RST_Mod) begin 
+        Last_addr_reg <= 0 ; 
+    end else begin 
+            Last_addr_reg <= Last_addr ; 
+    end    
+end
 endmodule
