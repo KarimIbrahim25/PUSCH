@@ -3,7 +3,6 @@ module SC_TOP(
     input wire CLK_TOP_new , 
     input wire CLK_TOP , 
     input wire RST_TOP , 
-    input wire EN_TOP , 
     input wire Shift_TOP , 
     input wire Config_TOP , // Higher Layer Parameter is Configured --> 1 else --> 0 
     input wire [9:0] N_cellID_TOP,
@@ -18,11 +17,10 @@ module SC_TOP(
     wire GOLD_OUT ; 
     wire GOLD_VALID ; 
 
-Gold_Gen PRGEN(
+ Gold_Gen  PRGEN(
     .CLK_PR(CLK_TOP) ,
     .CLK_PR_new(CLK_TOP_new) ,
     .RST_PR(RST_TOP) ,
-    .EN_PR(EN_TOP) , 
     .Config(Config_TOP),
     .N_cellID(N_cellID_TOP),
     .Shift(Shift_TOP) ,
@@ -38,7 +36,6 @@ Scrambler SC_1(
 
     .CLK_SC(CLK_TOP) ,
     .RST_SC(RST_TOP) ,
-    .EN_SC(EN_TOP) , 
     .SC_IN(TOP_IN),
     .SC_BUSY_IN(TOP_BUSY_IN) ,
     .SC_Valid_IN(TOP_Valid_IN) , 
