@@ -16,7 +16,6 @@ module REM_TOP#(
 
     input wire signed [DMRS_Len-1:0]Dmrs_I_TOP , 
     input wire signed [DMRS_Len-1:0]Dmrs_Q_TOP ,
-    input wire DMRS_Valid_In_TOP ,
     input wire DMRS_Done_TOP ,
 
     input wire signed [FFT_Len-1:0] FFT_I_TOP , 
@@ -54,7 +53,6 @@ REmapper_new DDD0(
 .Sym_End(Sym_End_TOP) , 
 .Dmrs_I(Dmrs_I_TOP) , 
 .Dmrs_Q(Dmrs_Q_TOP) , 
-.DMRS_Valid_In(DMRS_Valid_In_TOP) , 
 .DMRS_Done(DMRS_Done_TOP),
 .FFT_I(FFT_I_TOP) , 
 .FFT_Q(FFT_Q_TOP) , 
@@ -80,6 +78,7 @@ PingPongMemory DDD1(
 .data_in(RE_Real_TOP) , 
 .write_enable(write_enable_TOP) , 
 .Sym_Done(Sym_Done_TOP) , 
+.RE_Valid_OUT(RE_Valid_OUT_TOP) ,
 .write_addr(Wr_addr_TOP) , 
 .data_out(PingPongOUT_I_TOP) , 
 .Ping_VALID(Ping_VALID_I) , 
@@ -93,16 +92,13 @@ PingPongMemory DDD2(
 .CLK_new(CLK_RE_New) , 
 .data_in(RE_Imj_TOP) , 
 .write_enable(write_enable_TOP) , 
+.RE_Valid_OUT(RE_Valid_OUT_TOP) ,
 .Sym_Done(Sym_Done_TOP) , 
 .write_addr(Wr_addr_TOP) , 
 .data_out(PingPongOUT_Q_TOP) , 
 .Ping_VALID(Ping_VALID_Q) , 
 .RE_Done(RE_Done_TOP)
 );
-
-
-
-
-
+ 
 
 endmodule
