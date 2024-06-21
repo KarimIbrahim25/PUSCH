@@ -10,6 +10,7 @@ module PingPongMemory #(
     input wire signed [FFT_Len-1:0] data_in,
     input wire write_enable,
     input wire Sym_Done,
+    input wire RE_Valid_OUT , 
     input wire RE_Done , 
     input wire [10:0] write_addr,  // External write address input
     output reg signed [DATA_WIDTH-1:0] data_out , // Output data
@@ -67,7 +68,7 @@ module PingPongMemory #(
                 end
             end       
         end
-        else if (write_enable) begin
+        else if (write_enable && RE_Valid_OUT) begin
             if (use_ping) begin
                 if (write_addr + WRITE_ADDR_SHIFT < MEM_DEPTH)
                     ping[write_addr + WRITE_ADDR_SHIFT] <= data_in;
