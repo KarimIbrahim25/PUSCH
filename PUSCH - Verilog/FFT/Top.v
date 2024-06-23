@@ -26,12 +26,14 @@ module Top #(
 
         output Finish,
 
-        output reg Busy
+        output reg Busy_reg
 
     );
 
 ///Which_stages module///
 
+reg  Busy ; 
+integer m ; 
 wire [3:0] stage2;
 
 wire [2:0] stage3;
@@ -211,6 +213,26 @@ always @(posedge clk or posedge rst ) begin
 
         end
     
+end
+always @(posedge clk or posedge rst ) begin
+    
+        if(rst) begin
+            m <= 0 ;
+            Busy_reg<=0;
+    
+        end else if (Busy) begin
+               
+              if(m == 24 )  
+                Busy_reg<=Busy;
+              else begin
+                Busy_reg <= 0 ;   
+                m <= m+1 ;
+              end
+        end
+        else begin  
+            m <= 0 ;  
+            Busy_reg <= 0 ; 
+        end
 end
 pulse_gen P0(
     
