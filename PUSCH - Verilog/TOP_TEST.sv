@@ -85,18 +85,25 @@ module PUSCH_Top_tb;
     enable = 0;
     Data_in = 0;
     modulation_order = 3'd2;
-    N_Rapid = 15;
-    N_Rnti = 50000;
-    N_cell_ID = 900;
+    N_Rapid = 14;
+    N_Rnti = 31578;
+    N_cell_ID = 820;
     Config = 0;
     N_slot_frame = 0;
-    N_rb = 6; // FFT Symbols / 12
+    N_rb = 100; // FFT Symbols / 12
     En_hopping = 0;
-    N_symbol = 3;
-    N_sc_start = 193;
-    Sym_Start_REM = 1;
-    Sym_End_REM = 8;
+   
 
+
+    N_rb = 100; // FFT Symbols / 12
+    N_symbol = 3;
+    N_sc_start = 10;
+    Sym_Start_REM = 1;
+    Sym_End_REM = 3;
+
+    
+    
+    
     // Clk Divider reset
     reset_div = 0;
     #(period_new);
@@ -115,9 +122,9 @@ module PUSCH_Top_tb;
   #(period*18);
   // HARQ
   base_graph = 2; 
-  rv_number = 1;
+  rv_number = 0;
     process_number = 1;
-    available_coded_bits = 144;
+    available_coded_bits = 4802 ;
 
     #(period*81);
     // Scrambler
@@ -163,7 +170,10 @@ module PUSCH_Top_tb;
     #1000;
 
     */
-    //wait(Dut.FFT_Block.Finish);
+    wait(Dut.REM_Block.DDD0.RE_Done == 1);
+    wait(Dut.IFFT_Block.IFFT_CP_TOP.READy_out == 1) ; 
+    wait(Dut.IFFT_Block.IFFT_CP_TOP.READy_out == 0) ; 
+
     $stop;
   end
 
