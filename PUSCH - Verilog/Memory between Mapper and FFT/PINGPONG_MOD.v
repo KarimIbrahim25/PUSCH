@@ -4,6 +4,7 @@ module PingPongMem_MOD #(
 )(
     input wire CLK,
     input wire RST,
+    input wire CLK_NEW,
 
     input wire [DATA_WIDTH-1:0] data_in,
     input wire BUSY , 
@@ -37,10 +38,10 @@ module PingPongMem_MOD #(
             use_ping = ~use_ping;
         end
     end
-    always@(posedge CLK or negedge RST) begin 
+    always@(posedge CLK_NEW or negedge RST) begin 
         if(! RST )
             out_ping <= 1 ; 
-        else if(Last_indx == Last_addr_mem[0]) begin 
+        else if(Last_indx == Last_addr_mem[0] ) begin 
             out_ping <= ~out_ping;
         end    
     end    
@@ -81,7 +82,7 @@ module PingPongMem_MOD #(
 
 
     // Read logic on Sym_Done signal
-    always @(posedge CLK) begin
+    always @(posedge CLK_NEW) begin
      if(! RST) begin 
           data_out <= 0 ; 
           Last_indx <= 1 ;   
@@ -90,7 +91,7 @@ module PingPongMem_MOD #(
             data_out <= 'b0 ;
             Last_indx <= 1 ;  
     end    
-     else if (flag & ! BUSY) begin
+     else if (flag) begin
             // if done counter > 1 , but we havent reached the last index yet continue to output from 
             if (out_ping ) begin
                  data_out <= ping[Last_indx-1];            
@@ -114,24 +115,29 @@ module PingPongMem_MOD #(
 always@(posedge CLK or negedge RST) begin 
     if(!RST) begin 
             Counter <= 0 ; 
-            flag <= 0 ;      
     end
     else if(MOD_DONE) begin 
             Counter <= Counter + 1 ; 
-            flag <= 1 ; 
     end
-     else if (Last_indx == Last_addr_mem[0]  ) begin  
-                 Counter <= Counter - 1; 
-     end           
-                 if ( (Counter == 0)) begin 
-                        flag <= 0 ; 
-                 end
-                 else begin 
-                        flag <= 1 ;  
-                 end          
-    
-end
+end  
+  always@(posedge CLK_NEW or negedge RST) begin 
 
+      if (Last_indx == Last_addr_mem[0]  ) begin  
+                 Counter <= Counter - 1; 
+     end     
+  end 
+
+always@(*) begin 
+    if(!RST) begin 
+            flag = 0 ;      
+    end
+    else if((Counter != 0) && (! BUSY)) begin 
+            flag = 1 ; 
+    end
+                   
+     else if (Counter == 0)  
+              flag = 0 ;      
+    end 
 
 always @(posedge CLK or negedge RST) begin 
     if(!RST) begin 
