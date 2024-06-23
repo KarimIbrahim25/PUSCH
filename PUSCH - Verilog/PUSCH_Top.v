@@ -250,7 +250,7 @@ PingPongMem_MOD #(.MEM_DEPTH(MEM_DEPTH_FFT), .DATA_WIDTH(WIDTH_FFT)) Mod_FFT_Mem
     .data_in(Data_Mod_Mem_r),
     .Last_addr(Last_addr_Mod),
     .write_enable(wrt_enable_Mod),
-    .BUSY(BUSY)  ,
+    .BUSY(Busy)  ,
     .Mod_Valid_OUT(Modulator_valid) ,
     .PINGPONG_SWITCH(PINGPONG_SWITCH) ,  
     .MOD_DONE(Mod_done) ,
@@ -270,7 +270,7 @@ PingPongMem_MOD #(.MEM_DEPTH(MEM_DEPTH_FFT), .DATA_WIDTH(WIDTH_FFT)) Mod_FFT_Mem
     .write_enable(wrt_enable_Mod),
     .Mod_Valid_OUT(Modulator_valid) ,
     .PINGPONG_SWITCH(PINGPONG_SWITCH) ,
-    .BUSY(BUSY)  ,
+    .BUSY(Busy)  ,
     .MOD_DONE(Mod_done) ,
     .write_addr(Wr_addr_Mod),  // External write address input
     .data_out(Data_Mod_FFT_i)  // Output data
@@ -290,9 +290,9 @@ Top #(.WIDTH(WIDTH_FFT)) FFT_Block (
     .do_im(Data_FFT_REM_i),
     .do_en(FFT_valid),
     .address(Write_addr_FFT),
-    .last_address(Last_addr_Mod_reg+1'b1),
+    .last_address(Last_addr_Mod_reg + 1'b1 ),
     .Finish(FFT_done) , 
-    .Busy(Busy)
+    .Busy_reg(Busy)
 );
 
 
