@@ -61,6 +61,7 @@ always @(*) begin
     IDLE: begin 
         if( (DMRS_Done) && Symbol_now == Sym_Start) begin 
             next_state =Map_DMRS;
+            DMRS_addr = 0 ; 
         end 
         else if ((FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
             next_state = Map_FFT; 
@@ -71,7 +72,7 @@ always @(*) begin
     end     
 
     Map_DMRS: begin 
-        if (Counter >= N_sc && Counter < Last_indx) begin
+        if (! Sym_Done) begin
                 next_state = Map_DMRS; 
             end else begin
                 next_state = WAIT_FFT; 
@@ -80,14 +81,16 @@ always @(*) begin
     WAIT_FFT : begin 
       if ( (FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End)) begin
             next_state = Map_FFT; 
-      end else 
-            next_state = WAIT_FFT ; 
+      end else if (Symbol_now <= Sym_End) 
+                 next_state = WAIT_FFT ;
+          else 
+            next_state = IDLE ;   
     end  
 
     Map_FFT: begin 
         if ( (FFT_Valid_In || FFT_Done) && (Symbol_now > Sym_Start && Symbol_now <= Sym_End) && Counter >= N_sc && Counter <= Last_indx) begin    
                 next_state = Map_FFT; 
-        end else if (Symbol_now < Sym_End+1) begin
+        end else if (Symbol_now <= Sym_End) begin
                 next_state = WAIT_FFT;  
         end
         else
@@ -106,7 +109,7 @@ always @(*) begin
     case(current_state)
 
      IDLE : begin 
-        Symbol_now = Sym_Start ; 
+  //      Symbol_now = Sym_Start ; 
         RE_Valid_OUT = 1'b0 ; 
         EN_Counter = 1'b0 ; 
         Sym_Done = 1'b0 ; 
@@ -121,12 +124,10 @@ always @(*) begin
   
         Map_DMRS : begin          
             if (Counter >= Last_indx) begin
-                Symbol_now = Sym_Start + 1 ; 
                 Sym_Done = 1 ;
-                 EN_Counter = 1'b0 ; 
+                EN_Counter = 1'b0 ; 
  
             end else begin
-                Symbol_now = Sym_Start ;
                 Sym_Done = 0 ;
              EN_Counter = 1'b1 ; 
        
@@ -146,17 +147,7 @@ always @(*) begin
                 RE_Valid_OUT = 1'b1 ;     
             end
 
-            if (Counter >= Last_indx) begin
-                Symbol_now = Sym_Start + 1 ; 
-                Sym_Done = 1 ;
-                 EN_Counter = 1'b0 ; 
- 
-            end else begin
-                Symbol_now = Sym_Start ;
-                Sym_Done = 0 ;
-             EN_Counter = 1'b1 ; 
-       
-            end
+
         end     
         WAIT_FFT : begin 
             if(Counter == Last_indx)begin
@@ -166,7 +157,6 @@ always @(*) begin
              end 
             
             
-            Symbol_now = Sym_Start + 1 ;
             RE_Done = 0 ; 
             RE_Valid_OUT = 1'b0 ; 
             Sym_Done = 1'b0 ;
@@ -184,7 +174,7 @@ always @(*) begin
         end   
 
         Map_FFT : begin    
-            if(Counter == Last_indx)begin
+            if(Counter == Last_indx) begin
                 EN_Counter = 0 ; 
             end else begin 
                 EN_Counter = 1 ;       // condition ti write fft but dmrs is not done yet 
@@ -194,18 +184,14 @@ always @(*) begin
                 RE_Imj = FFT_Q ; 
                 Wr_addr = FFT_addr + N_sc ;
                 RE_Valid_OUT = 1 ; 
-            if (Counter == Last_indx-1) begin
-                Symbol_now = Symbol_now + 1 ; 
-                Sym_Done = 1 ; 
+            if (Counter == Last_indx) begin
+                  Sym_Done = 1 ; 
             end else begin
-                Symbol_now = Symbol_now ; 
                 Sym_Done = 0 ;       
             end
              
         end    
- 
-       // default : current_state = IDLE ; 
-     endcase    
+      endcase    
 end
 // tyb 3shan mn3mlsh delay kbeer hnkhleh yktb el zeros mn el awel ely abl sib carrier starting point 
 
@@ -214,8 +200,8 @@ always @(posedge CLK_RE or negedge RST_RE ) begin
             DMRS_addr <= 0 ;
    else if((current_state != Map_DMRS))
             DMRS_addr <= 0 ; 
-   else if((current_state == Map_DMRS) && (Counter[0] == N_sc[0]) )     
-                DMRS_addr <= DMRS_addr + 1 ;                     
+   else if((current_state == Map_DMRS) && (Counter[0] == N_sc[0]) && (DMRS_addr < (D_symbol)))     
+                DMRS_addr <= DMRS_addr + 1 ;                                 
 
 end
 
@@ -225,15 +211,24 @@ always @(posedge CLK_RE or negedge RST_RE ) begin
     else if (EN_Counter && current_state != WAIT_FFT ) begin // hena b hot awl zeros
             Counter <= Counter +1 ; 
     end else if (! EN_Counter ) 
-            Counter <= N_sc ; 
+            Counter <= N_sc +1; 
+end
 
+always @(posedge CLK_RE or negedge RST_RE ) begin 
+    if(!RST_RE) 
+            Symbol_now <= 0 ;      
+    else if (current_state == IDLE) 
+              Symbol_now <= Sym_Start ; 
+    else if (Sym_Done && (Symbol_now < Sym_End + 1)) begin // hena b hot awl zeros
+            Symbol_now <= Symbol_now +1 ; 
+    end else if (Symbol_now == Sym_End + 2 ) 
+            Symbol_now <= Sym_Start ;  
 
 end   
-
 assign N_symbol = N_rb * 12 ; // de ghalat el mfrod enha a2l mstnyen rd mostafa
 assign D_symbol = N_rb * 6    ;          // 3dd el dmrs kolha b2a mstnyen rd kareem 
 
-assign Last_indx = N_sc + N_symbol  ; 
+assign Last_indx = N_sc + N_symbol +1 ; 
 
 assign write_enable = EN_Counter ; 
 
