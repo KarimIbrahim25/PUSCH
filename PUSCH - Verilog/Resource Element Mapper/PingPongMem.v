@@ -2,7 +2,7 @@ module PingPongMemory #(
     parameter MEM_DEPTH = 2048,
     parameter DATA_WIDTH = 26,
     parameter FFT_Len = 18 , 
-    parameter WRITE_ADDR_SHIFT = 423  // Address shift for zero padding
+    parameter WRITE_ADDR_SHIFT = 420  // Address shift for zero padding
 )(
     input wire CLK,
     input wire CLK_new , 
@@ -23,7 +23,10 @@ module PingPongMemory #(
     reg signed [FFT_Len-1:0] ping [0:MEM_DEPTH-1];
     reg signed [FFT_Len-1:0] pong [0:MEM_DEPTH-1];
     reg flag ; 
-    reg [10:0] Last_indx ; 
+    reg [10:0] Last_indx ;
+    reg [1:0] Counter ; 
+    reg Done_REG ; 
+ 
     // Memory select flag
     reg use_ping;
     integer i;
@@ -31,10 +34,17 @@ module PingPongMemory #(
     always @(posedge CLK or negedge RST) begin
         if (!RST) begin
             use_ping <= 1;
-        end else if (Sym_Done) begin
+        end else if (Done_REG) begin
             use_ping <= ~use_ping;
         end
     end
+    always @(posedge CLK or negedge RST) begin
+        if (!RST) begin
+            Done_REG <= 0;
+        end else begin
+            Done_REG <= Sym_Done;
+        end
+    end    
     always@(posedge CLK_new or negedge RST) begin 
         if(! RST )
             out_ping <= 1 ; 
@@ -50,14 +60,14 @@ module PingPongMemory #(
                     ping[i] <=0 ;
           end
         end
-        else if (RE_Done == 1 ) begin
+        /*else if (RE_Done == 1 ) begin
             for (i = 0; i < MEM_DEPTH; i = i + 1) begin
                     pong[i] <= 0;
                     ping[i] <= 0;
             end
-        end
+        end*/
         else if (Sym_Done) begin
-            if(!use_ping) begin 
+            if(!use_ping ) begin 
                 for (i = 0; i < MEM_DEPTH; i = i + 1) begin
                     ping[i] <=0 ;
                 end
@@ -68,6 +78,7 @@ module PingPongMemory #(
                 end
             end       
         end
+        
         else if (write_enable && RE_Valid_OUT) begin
             if (use_ping) begin
                 if (write_addr + WRITE_ADDR_SHIFT < MEM_DEPTH)
@@ -129,7 +140,7 @@ module PingPongMemory #(
 always@(posedge CLK_new or negedge RST) begin 
     if(!RST)
             flag = 0 ; 
-    else if(Sym_Done) begin 
+    else if(Done_REG) begin 
             flag = 1 ; 
     end else if (Last_indx == MEM_DEPTH-1)  
             flag = 0 ; 
